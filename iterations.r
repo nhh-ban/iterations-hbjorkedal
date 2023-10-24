@@ -50,9 +50,15 @@ test_stations_metadata(stations_metadata_df)
 
 source("gql-queries/vol_qry.r")
 
-stations_metadata_df %>% 
+sample_station <- 
+  stations_metadata_df %>% 
   filter(latestData > Sys.Date() - days(7)) %>% 
-  sample_n(1) %$% 
+  sample_n(1)
+
+sample_station_name <- sample_station %>% 
+  pull(name)
+
+sample_station %$%  
   vol_qry(
     id = id,
     from = to_iso8601(latestData, -4),
@@ -61,7 +67,12 @@ stations_metadata_df %>%
   GQL(., .url = configs$vegvesen_url) %>%
   transform_volumes() %>% 
   ggplot(aes(x=from, y=volume)) + 
-  geom_line() + 
+  geom_line(aes(color = "Volume")) +
+  labs(
+    title = paste("Traffic volume at station", sample_station_name),
+    x = "Date",
+    y = "Volume"
+  )+
   theme_classic()
 
 
